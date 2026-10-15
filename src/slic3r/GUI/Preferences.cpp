@@ -389,7 +389,7 @@ wxBoxSizer *PreferencesDialog::create_item_language_combobox(
             language_name = wxString::FromUTF8("Polski");
         }
         else if (vlist[i] == wxLocale::GetLanguageInfo(wxLANGUAGE_THAI)) {
-            language_name = wxString::FromUTF8("\xE0\xB9\x84\xE0\xB8\x97\xE0\xB8\xA2"); // ไทย
+            language_name = wxString::FromUTF8("ไทย (Thai)");
         }
         else if (vlist[i] == wxLocale::GetLanguageInfo(wxLANGUAGE_ROMANIAN)) {
             language_name = wxString::FromUTF8("Rom\xC3\xA2n\xC4\x83"); // Română
