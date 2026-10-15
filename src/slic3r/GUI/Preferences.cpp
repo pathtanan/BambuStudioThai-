@@ -380,7 +380,9 @@ wxBoxSizer *PreferencesDialog::create_item_language_combobox(
         else if (vlist[i] == wxLocale::GetLanguageInfo(wxLANGUAGE_POLISH)) {
             language_name = wxString::FromUTF8("Polski");
         }
-
+        else if (vlist[i] == wxLocale::GetLanguageInfo(wxLANGUAGE_THAI)) {
+            language_name = wxString::FromUTF8("ไทย (Thai)");
+        }
         if (language == vlist[i]->CanonicalName) {
             m_current_language_selected = i;
         }
