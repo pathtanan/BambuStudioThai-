@@ -2678,6 +2678,8 @@ void ImGuiWrapper::init_font(bool compress)
     ImFontAtlas::GlyphRangesBuilder builder;
     builder.AddRanges(m_glyph_ranges);
     builder.AddRanges(ImGui::GetIO().Fonts->GetGlyphRangesDefault());
+    // Thai MOD: catalog in en locale can contain Thai translations.
+    builder.AddRanges(io.Fonts->GetGlyphRangesThai());
 #ifdef __APPLE__
     if (m_font_cjk)
         // Apple keyboard shortcuts are only contained in the CJK fonts.
@@ -2708,6 +2710,19 @@ void ImGuiWrapper::init_font(bool compress)
         }
     }
 
+    // Thai MOD: merge Thai glyphs into the regular HarmonyOS/Nanum font,
+    // keeping its original Latin metrics and UI scale. Use Windows Tahoma on Windows.
+#ifdef _WIN32
+    {
+        ImFontConfig thai_cfg;
+        thai_cfg.MergeMode = true;
+        thai_cfg.OversampleH = thai_cfg.OversampleV = 1;
+        const char* thai_regular = "C:/Windows/Fonts/tahoma.ttf";
+        if (boost::filesystem::exists(thai_regular))
+            io.Fonts->AddFontFromFileTTF(thai_regular, m_font_size, &thai_cfg, io.Fonts->GetGlyphRangesThai());
+    }
+#endif
+
     if (m_is_korean)
         bold_font = io.Fonts->AddFontFromFileTTF((Slic3r::resources_dir() + "/fonts/" + "NanumGothic-Bold.ttf").c_str(), m_font_size, &cfg, ranges.Data);
     else
@@ -2716,6 +2731,18 @@ void ImGuiWrapper::init_font(bool compress)
         bold_font = io.Fonts->AddFontDefault();
         if (bold_font == nullptr) { throw Slic3r::RuntimeError("ImGui: Could not load deafult font"); }
     }
+
+    // Thai MOD: merge Thai glyphs into bold font as well.
+#ifdef _WIN32
+    {
+        ImFontConfig thai_cfg;
+        thai_cfg.MergeMode = true;
+        thai_cfg.OversampleH = thai_cfg.OversampleV = 1;
+        const char* thai_bold = "C:/Windows/Fonts/tahomabd.ttf";
+        if (boost::filesystem::exists(thai_bold))
+            io.Fonts->AddFontFromFileTTF(thai_bold, m_font_size, &thai_cfg, io.Fonts->GetGlyphRangesThai());
+    }
+#endif
 
 #ifdef _WIN32
     // Render the text a bit larger (see GLCanvas3D::_resize() and issue #3401), but only if the scale factor
