@@ -1,0 +1,45 @@
+name: Build Thai Filament Web Only
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/slic3r/GUI/DeviceWeb/device_page/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/slic3r/GUI/DeviceWeb/device_page
+        run: npm ci --no-audit --no-fund
+
+      - name: Build React device page
+        working-directory: src/slic3r/GUI/DeviceWeb/device_page
+        run: npm run build
+
+      - name: Prepare Portable overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staging/resources/web/device_page
+          cp -a src/slic3r/GUI/DeviceWeb/device_page/dist staging/resources/web/device_page/
+          test -f staging/resources/web/device_page/dist/index.html
+
+      - name: Upload Thai Portable web overlay
+        uses: actions/upload-artifact@v4
+        with:
+          name: BambuStudio_Thai_Filament_Web_Portable
+          path: staging/
+          if-no-files-found: error
+          retention-days: 7
