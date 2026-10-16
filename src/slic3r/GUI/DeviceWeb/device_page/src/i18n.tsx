@@ -20,6 +20,7 @@ import tr_TR from '@locales/tr_TR.json';
 import pt_BR from '@locales/pt_BR.json';
 import ko_KR from '@locales/ko_KR.json';
 import pl_PL from '@locales/pl_PL.json';
+import th_TH from '@locales/th_TH.json';
 
 // Detect language: URL ?lang= param > localStorage > fallback 'en'
 // Consistent with other webview pages (text.js TranslatePage pattern)
@@ -63,6 +64,8 @@ i18n
       pt_BR: { translation: pt_BR },
       ko_KR: { translation: ko_KR },
       pl_PL: { translation: pl_PL },
+      th: { translation: th_TH },
+      th_TH: { translation: th_TH },
     },
     // When a key has no translation, return the key itself (English original text)
     parseMissingKeyHandler: (key) => key,
