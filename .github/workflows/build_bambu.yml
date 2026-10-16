@@ -218,6 +218,7 @@ jobs:
           if (!(Test-Path "BambuStudio_Thai_Setup.exe")) {
             throw "Installer EXE was not created"
           }
+          
       - name: Pack app
         if: inputs.os == 'windows-latest'
         working-directory: ${{ github.workspace }}
@@ -236,7 +237,13 @@ jobs:
           name: BambuStudio_Windows_${{ env.ver }}_portable
           path: ${{ github.workspace }}/BambuStudio_Windows_${{ env.ver }}_portable.zip
 
-
+      - name: Upload Thai MOD Installer EXE
+        if: inputs.os == 'windows-latest'
+        uses: actions/upload-artifact@v6
+        with:
+          name: BambuStudio_Thai_Installer_${{ env.ver }}
+          path: ${{ github.workspace }}/BambuStudio_Thai_Setup.exe
+          if-no-files-found: error
   # Ubuntu
       - name: Install dependencies from BuildLinux.sh
         if: inputs.os == 'ubuntu-22.04' || inputs.os == 'ubuntu-24.04' || inputs.os == 'ubuntu-26.04'
