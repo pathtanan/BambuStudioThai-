@@ -157,7 +157,67 @@ jobs:
           }
 
           Write-Host "Thai catalog installed: $dst"
+          
+      - name: Create Thai MOD Installer EXE
+        if: inputs.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $script = @'
+          Unicode true
+          Name "Bambu Studio Thai MOD"
+          OutFile "BambuStudio_Thai_Setup.exe"
+          InstallDir "$PROGRAMFILES64\Bambu Studio Thai"
+          RequestExecutionLevel admin
+          SetCompressor /SOLID lzma
+          ShowInstDetails show
+          ShowUninstDetails show
 
+          Page directory
+          Page instfiles
+          UninstPage uninstConfirm
+          UninstPage instfiles
+
+          Section "Install"
+            SetOutPath "$INSTDIR"
+            File /r "install-dir\*"
+
+            CreateDirectory "$SMPROGRAMS\Bambu Studio Thai"
+            CreateShortCut "$SMPROGRAMS\Bambu Studio Thai\Bambu Studio Thai.lnk" "$INSTDIR\bambu-studio.exe"
+            CreateShortCut "$DESKTOP\Bambu Studio Thai.lnk" "$INSTDIR\bambu-studio.exe"
+
+            WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+            SetRegView 64
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai" "DisplayName" "Bambu Studio Thai MOD"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai" "DisplayIcon" "$INSTDIR\bambu-studio.exe"
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai" "NoModify" 1
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai" "NoRepair" 1
+          SectionEnd
+
+          Section "Uninstall"
+            Delete "$DESKTOP\Bambu Studio Thai.lnk"
+            RMDir /r "$SMPROGRAMS\Bambu Studio Thai"
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThai"
+            RMDir /r "$INSTDIR"
+          SectionEnd
+          '@
+
+          Set-Content -Path "ThaiInstaller.nsi" -Value $script -Encoding UTF8
+
+          $nsis = "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          if (!(Test-Path $nsis)) {
+            throw "NSIS compiler not found: $nsis"
+          }
+
+          & $nsis "ThaiInstaller.nsi"
+          if ($LASTEXITCODE -ne 0) {
+            throw "NSIS installer build failed"
+          }
+
+          if (!(Test-Path "BambuStudio_Thai_Setup.exe")) {
+            throw "Installer EXE was not created"
+          }
       - name: Pack app
         if: inputs.os == 'windows-latest'
         working-directory: ${{ github.workspace }}
