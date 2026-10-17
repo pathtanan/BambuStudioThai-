@@ -4,6 +4,7 @@ import { initReactI18next } from 'react-i18next';
 
 // Import all locale resources statically (bundled into JS, no runtime fetch needed)
 import en from '@locales/en.json';
+import th_TH from '@locales/th_TH.json';
 import zh_CN from '@locales/zh_CN.json';
 import ja_JP from '@locales/ja_JP.json';
 import it_IT from '@locales/it_IT.json';
@@ -20,7 +21,6 @@ import tr_TR from '@locales/tr_TR.json';
 import pt_BR from '@locales/pt_BR.json';
 import ko_KR from '@locales/ko_KR.json';
 import pl_PL from '@locales/pl_PL.json';
-import th_TH from '@locales/th_TH.json';
 
 // Detect language: URL ?lang= param > localStorage > fallback 'en'
 // Consistent with other webview pages (text.js TranslatePage pattern)
