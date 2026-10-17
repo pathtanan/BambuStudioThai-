@@ -4,6 +4,7 @@ on:
   push:
     branches:
      - master
+     - thai-mod
     paths:
      - 'deps/**'
      - 'src/**'
