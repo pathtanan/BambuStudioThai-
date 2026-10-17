@@ -124,6 +124,36 @@ jobs:
           choco install nsis
           choco install pkgconfiglite
 
+      - name: Generate merged Thai localization before Windows build
+        if: inputs.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check Babel==2.18.0
+          if ($LASTEXITCODE -ne 0) { throw "Unable to install Babel" }
+          python tools/compile_thai.py --download-upstream --output output
+          if ($LASTEXITCODE -ne 0) { throw "Thai translation merge failed" }
+          Copy-Item output/BambuStudio.mo resources/i18n/th/BambuStudio.mo -Force
+          New-Item -ItemType Directory -Force bbl/i18n/th | Out-Null
+          Copy-Item output/BambuStudio_th.po bbl/i18n/th/BambuStudio_th.po -Force
+          python tools/patch_react_i18n.py
+          if ($LASTEXITCODE -ne 0) { throw "React Thai localization patch failed" }
+
+      - name: Build React Filament Manager Thai resources before Windows install
+        if: inputs.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $web = Join-Path $env:GITHUB_WORKSPACE "src/slic3r/GUI/DeviceWeb/device_page"
+          Push-Location $web
+          npm ci
+          if ($LASTEXITCODE -ne 0) { throw "npm ci failed" }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw "React web build failed" }
+          Pop-Location
+          $dst = Join-Path $env:GITHUB_WORKSPACE "resources/web/device_page/dist"
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Copy-Item -Path (Join-Path $web 'dist/*') -Destination $dst -Recurse -Force
+          if (!(Test-Path (Join-Path $dst 'index.html'))) { throw "DeviceWeb dist missing" }
+
       - name: Build slicer Win
         if: inputs.os == 'windows-latest'
         working-directory: ${{ github.workspace }}

@@ -1,0 +1,51 @@
+name: Build Thai Complete - Portable Translation Patch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/compile_thai.py'
+      - 'tools/patch_react_i18n.py'
+      - 'tools/BambuStudio*.mo'
+      - 'tools/CrealityPrint.mo'
+      - 'tools/BambuStudio.pot'
+      - 'src/slic3r/GUI/DeviceWeb/device_page/locales/th_TH.json'
+      - '.github/workflows/build_thai_complete.yml'
+jobs:
+  thai_web_and_catalog:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install localization build dependency
+        run: python -m pip install --disable-pip-version-check Babel==2.18.0
+      - name: Merge user, Creality and upstream Thai translations
+        run: python tools/compile_thai.py --download-upstream --output output
+      - name: Patch and check React Thai locale
+        run: python tools/patch_react_i18n.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: src/slic3r/GUI/DeviceWeb/device_page/package-lock.json
+      - name: Build DeviceWeb (Filament Manager and printer pages)
+        working-directory: src/slic3r/GUI/DeviceWeb/device_page
+        run: |
+          npm ci
+          npm run build
+      - name: Package Portable override and reports
+        shell: bash
+        run: |
+          mkdir -p upload/resources/i18n/th upload/resources/web/device_page
+          cp output/BambuStudio.mo upload/resources/i18n/th/BambuStudio.mo
+          cp -a src/slic3r/GUI/DeviceWeb/device_page/dist upload/resources/web/device_page/
+          cp output/BambuStudio_th.po upload/BambuStudio_th.po
+          cp output/translation_report.txt upload/translation_report.txt
+          cp output/translation_report.json upload/translation_report.json
+          cp THAI_README.txt upload/THAI_README.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BambuStudio_Thai_Complete_Portable_Patch
+          path: upload/
+          if-no-files-found: error
