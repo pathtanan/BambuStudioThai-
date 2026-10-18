@@ -43,6 +43,7 @@ jobs:
           $needle = '      es_ES: { translation: es_ES },'
           if (!$original.Contains($needle)) { throw 'Cannot locate expected Spanish locale entry' }
           $adapted = $original.Replace($needle, ('      es_ES: { translation: th_TH },' + [Environment]::NewLine + '      es: { translation: th_TH },'))
+          $adapted = $adapted.Replace("import es_ES from '@locales/es_ES.json';", '')
           Set-Content -LiteralPath $localeFile -Value $adapted -Encoding utf8
           Push-Location $web
           npm ci --no-audit --no-fund
