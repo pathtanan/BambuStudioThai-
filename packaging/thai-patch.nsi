@@ -42,7 +42,7 @@ Section "Install Thai language patch" SEC_MAIN
     MessageBox MB_ICONSTOP "Failed to back up the original Spanish translation. No files were replaced."
     Abort
   SetOutPath "$CatalogDir"
-  File "/oname=BambuStudio.mo" "${__FILEDIR__}\..\resources\i18n\th\BambuStudio.mo"
+  File "/oname=BambuStudio.mo" "..\resources\i18n\th\BambuStudio.mo"
   IfErrors 0 +3
     MessageBox MB_ICONSTOP "Could not install Thai catalog. Restore backup from $BackupRoot\original_es.mo."
     Abort
