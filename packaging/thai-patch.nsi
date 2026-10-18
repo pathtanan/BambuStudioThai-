@@ -20,13 +20,13 @@ Var BackupRoot
 Var CatalogDir
 
 Function .onInit
-  StrCpy $BackupRoot "$PROGRAMDATA\BambuStudioThaiPatch"
+  StrCpy $BackupRoot "$COMMONAPPDATA\BambuStudioThaiPatch"
   StrCpy $CatalogDir "$INSTDIR\resources\i18n\es"
 FunctionEnd
 
 Section "Install Thai language patch" SEC_MAIN
   StrCpy $CatalogDir "$INSTDIR\resources\i18n\es"
-  StrCpy $BackupRoot "$PROGRAMDATA\BambuStudioThaiPatch"
+  StrCpy $BackupRoot "$COMMONAPPDATA\BambuStudioThaiPatch"
   IfFileExists "$INSTDIR\bambu-studio.exe" +3 0
     MessageBox MB_ICONSTOP "Official Bambu Studio was not found in the selected folder. Please select the folder containing bambu-studio.exe."
     Abort
@@ -58,7 +58,7 @@ Section "Install Thai language patch" SEC_MAIN
 SectionEnd
 
 Section "Uninstall"
-  StrCpy $BackupRoot "$PROGRAMDATA\BambuStudioThaiPatch"
+  StrCpy $BackupRoot "$COMMONAPPDATA\BambuStudioThaiPatch"
   ReadRegStr $INSTDIR HKLM "Software\BambuStudioThaiLanguagePatch" "OfficialInstallDir"
   IfFileExists "$INSTDIR\bambu-studio.exe" +3 0
     MessageBox MB_ICONSTOP "Original Bambu Studio path was not found. Keep backup at $BackupRoot\original_es.mo and restore manually."
