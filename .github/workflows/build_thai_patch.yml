@@ -31,7 +31,9 @@ jobs:
           if ((Get-Item $source).Length -lt 100000) { throw 'Catalog unusually small' }
           & $compiler 'packaging/thai-patch.nsi'
           if ($LASTEXITCODE -ne 0) { throw 'NSIS compilation failed' }
-          if (!(Test-Path 'BambuStudio_Thai_Language_Patch_Setup.exe')) { throw 'Setup file missing' }
+          $built = 'packaging/BambuStudio_Thai_Language_Patch_Setup.exe'
+          if (!(Test-Path $built)) { throw 'Setup file missing' }
+          Copy-Item $built 'BambuStudio_Thai_Language_Patch_Setup.exe' -Force
       - name: Upload installer for testing
         uses: actions/upload-artifact@v4
         with:
