@@ -1,26 +1,28 @@
-# Bambu Studio Thai Language Patch (TEST)
+# Bambu Studio Thai — One-click Official Patch (TEST)
 
-Installs Thai gettext translations **over the Spanish translation slot** of an existing, genuine Bambu Studio Windows installation. It intentionally does **not** change `bambu-studio.exe`, `BambuStudio.dll`, the Network Plugin, firmware, or certificates.
+**Purpose:** apply Thai translations to a genuine, digitally signed Windows Bambu Studio installation. No EXE, DLL, network plugin, certificate, or Bambu account data is modified.
 
-## Installation
-1. Install genuine Bambu Studio from Bambu Lab, and close it.
-2. Run `BambuStudio_Thai_Language_Patch_Setup.exe` as administrator.
-3. Confirm the official Bambu Studio folder. The patch requires `bambu-studio.exe` and `resources\i18n\es\BambuStudio.mo`.
-4. Relaunch Official Bambu Studio and select **Español** in Preferences > Language. This is a temporary compatibility workaround; the list will still show Español.
-5. Check Thai desktop menus; test login, AMS, camera, printer connectivity and print upload.
+## Install
+1. Close **Bambu Studio Official 02.08.02.61** completely.
+2. Run BambuStudio_Thai_Language_Patch_Setup.exe as administrator.
+3. Select the folder containing the genuine bambu-studio.exe (normally C:\Program Files\Bambu Studio).
+4. The installer backs up the original Spanish gettext catalog and original DeviceWeb folder under C:\Program Files\BambuStudioThaiPatch.
+5. Restart Bambu Studio. Select **Español** in Preferences > Language. Thai will be shown via the Spanish slot, because the stock installation did not expose a working Thai selector during testing.
+6. Verify desktop menus, Filament Manager, Login, camera, AMS and an actual print job before distributing.
 
-## Rollback
-Uninstall **Bambu Studio Thai Language Patch** in Windows Apps & Features. The installer backs up the original Spanish `.mo` to `%ProgramFiles%\BambuStudioThaiPatch\original_es.mo`. Do not delete that backup manually.
+## Changes bundled in one EXE
+- Existing Thai desktop translation catalog with 3D navigation cube labels converted to ASCII English where the signed ImGuizmo renderer cannot display Thai glyphs (Front, Back, Top, Bottom, camera-context Left and Right).
+- Terminology corrections for World coordinates, Operation, and the generic Part key.
+- The React DeviceWeb/Filament Manager build from the matching source, with both es/es_ES aliases set to Thai.
+- Backups, safe repeat installation to the same folder, and an uninstall rollback.
 
-## Limitations / cautions
-- This is an **unverified test installer**. Build success does not guarantee official application compatibility.
-- Desktop strings that do not have a matching gettext entry remain untranslated.
-- DeviceWeb/Filament Manager React translations are **not** installed by this initial patch, because swapping bundled JS across releases requires exact version testing.
-- Close Bambu Studio before installing/uninstalling.
-- Do not run this twice without uninstalling it first. If the official application is upgraded, uninstall this patch and test again after the update.
-- Do not distribute as an official Bambu Lab product; clearly label as independent community translation.
+## Known limitations
+- **Text > Part** requires a context-specific source change to read **เพิ่มบนผิวงาน** without breaking the generic **Part** menu. A translation-only patch cannot isolate that instance, so for now all generic Part labels use **ชิ้นส่วน** rather than the earlier incorrect **ตอน**.
+- Other UI elements using Front/Back/Top/Bottom or Camera Left/Right translation keys will display English because those keys are shared with the navigation cube.
+- No changes to other embedded web pages beyond DeviceWeb are guaranteed.
+- The bundled web page must be retested for each Bambu Studio version. **Only test with the matching 02.08.02.61 installation first.**
 
-## Source
-- NSIS script: `packaging/thai-patch.nsi`
-- GitHub Actions build: `.github/workflows/build_thai_patch.yml`
-- Translated catalog: `resources/i18n/th/BambuStudio.mo`
+## Restore
+Close Official Bambu Studio. In Windows Installed apps, uninstall **Bambu Studio Thai Language Patch**. The original Spanish catalog and DeviceWeb directory will be restored from C:\Program Files\BambuStudioThaiPatch. Do not delete this backup by hand. Uninstall before upgrading the Official Bambu Studio version.
+
+This is a community test translation, not an official Bambu Lab release.
