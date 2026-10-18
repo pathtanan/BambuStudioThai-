@@ -1,0 +1,40 @@
+name: Build Thai Language Patch for Official Studio
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - thai-mod
+    paths:
+      - 'packaging/thai-patch.nsi'
+      - '.github/workflows/build_thai_patch.yml'
+      - 'resources/i18n/th/BambuStudio.mo'
+
+permissions:
+  contents: read
+
+jobs:
+  build-translation-patch:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Thai catalog and installer script
+        uses: actions/checkout@v4
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+      - name: Compile offline resource-only patch
+        shell: pwsh
+        run: |
+          $compiler = Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'
+          if (!(Test-Path $compiler)) { throw "NSIS not found: $compiler" }
+          $source = 'resources/i18n/th/BambuStudio.mo'
+          if (!(Test-Path $source)) { throw "Translation missing: $source" }
+          if ((Get-Item $source).Length -lt 100000) { throw 'Catalog unusually small' }
+          & $compiler 'packaging/thai-patch.nsi'
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS compilation failed' }
+          if (!(Test-Path 'BambuStudio_Thai_Language_Patch_Setup.exe')) { throw 'Setup file missing' }
+      - name: Upload installer for testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: BambuStudio_Thai_Language_Patch_Test
+          path: BambuStudio_Thai_Language_Patch_Setup.exe
+          if-no-files-found: error
