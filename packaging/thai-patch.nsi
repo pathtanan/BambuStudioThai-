@@ -33,14 +33,24 @@ Section "Install Thai language patch" SEC_MAIN
   IfFileExists "$CatalogDir\BambuStudio.mo" +3 0
     MessageBox MB_ICONSTOP "Spanish language catalog was not found. This patch needs an official Bambu Studio install with Spanish support."
     Abort
-  IfFileExists "$BackupRoot\original_es.mo" 0 +3
-    MessageBox MB_ICONSTOP "A patch backup already exists. Remove the previous Thai patch first; the original catalog will not be overwritten."
+  ; Reuse the original-language backup when reinstalling/upgrading the same patch.
+  ; Never overwrite the original backup with already-translated text.
+  IfFileExists "$BackupRoot\original_es.mo" existing_backup new_backup
+
+  existing_backup:
+    ReadRegStr $R0 HKLM "Software\BambuStudioThaiLanguagePatch" "OfficialInstallDir"
+    StrCmp $R0 "$INSTDIR" backup_ready
+    MessageBox MB_ICONSTOP "A previous patch backup exists, but its registered Bambu Studio folder differs or is missing. Backup was preserved at $BackupRoot\original_es.mo. Please uninstall the earlier patch or inspect the backup before continuing."
     Abort
-  CreateDirectory "$BackupRoot"
-  CopyFiles /SILENT "$CatalogDir\BambuStudio.mo" "$BackupRoot\original_es.mo"
-  IfErrors 0 +3
-    MessageBox MB_ICONSTOP "Failed to back up the original Spanish translation. No files were replaced."
-    Abort
+
+  new_backup:
+    CreateDirectory "$BackupRoot"
+    CopyFiles /SILENT "$CatalogDir\BambuStudio.mo" "$BackupRoot\original_es.mo"
+    IfErrors 0 backup_ready
+      MessageBox MB_ICONSTOP "Failed to back up the original Spanish translation. No language files were changed."
+      Abort
+
+  backup_ready:
   SetOutPath "$CatalogDir"
   File "/oname=BambuStudio.mo" "..\resources\i18n\th\BambuStudio.mo"
   IfErrors 0 +3
@@ -54,7 +64,7 @@ Section "Install Thai language patch" SEC_MAIN
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "DisplayIcon" "$INSTDIR\bambu-studio.exe"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "DisplayVersion" "0.1-test"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "NoModify" 1
-  MessageBox MB_ICONINFORMATION "Thai translation installed. Open the official Bambu Studio and choose Español in Preferences > Language. The visible desktop UI should now use Thai translations.$\r$\n$\r$\nTest cloud login and printing before distribution."
+  MessageBox MB_ICONINFORMATION "Thai translation installed or updated. Open the official Bambu Studio and choose Español in Preferences > Language. The visible desktop UI should now use Thai translations.$\r$\n$\r$\nTest cloud login and printing before distribution."
 SectionEnd
 
 Section "Uninstall"
