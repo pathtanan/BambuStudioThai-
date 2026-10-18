@@ -33,7 +33,7 @@ Section "Install Thai language patch" SEC_MAIN
   IfFileExists "$CatalogDir\BambuStudio.mo" +3 0
     MessageBox MB_ICONSTOP "Spanish language catalog was not found. This patch needs an official Bambu Studio install with Spanish support."
     Abort
-  IfFileExists "$BackupRoot\original_es.mo" 0 +4
+  IfFileExists "$BackupRoot\original_es.mo" 0 +3
     MessageBox MB_ICONSTOP "A patch backup already exists. Remove the previous Thai patch first; the original catalog will not be overwritten."
     Abort
   CreateDirectory "$BackupRoot"
@@ -42,12 +42,13 @@ Section "Install Thai language patch" SEC_MAIN
     MessageBox MB_ICONSTOP "Failed to back up the original Spanish translation. No files were replaced."
     Abort
   SetOutPath "$CatalogDir"
-  File "/oname=BambuStudio.mo" "resources\i18n\th\BambuStudio.mo"
+  File "/oname=BambuStudio.mo" "${__FILEDIR__}\..\resources\i18n\th\BambuStudio.mo"
   IfErrors 0 +3
     MessageBox MB_ICONSTOP "Could not install Thai catalog. Restore backup from $BackupRoot\original_es.mo."
     Abort
   SetOutPath "$BackupRoot"
   WriteUninstaller "$BackupRoot\Uninstall_Thai_Patch.exe"
+  WriteRegStr HKLM "Software\BambuStudioThaiLanguagePatch" "OfficialInstallDir" "$INSTDIR"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "DisplayName" "Bambu Studio Thai Language Patch"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "UninstallString" '"$BackupRoot\Uninstall_Thai_Patch.exe"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch" "DisplayIcon" "$INSTDIR\bambu-studio.exe"
@@ -58,6 +59,10 @@ SectionEnd
 
 Section "Uninstall"
   StrCpy $BackupRoot "$PROGRAMDATA\BambuStudioThaiPatch"
+  ReadRegStr $INSTDIR HKLM "Software\BambuStudioThaiLanguagePatch" "OfficialInstallDir"
+  IfFileExists "$INSTDIR\bambu-studio.exe" +3 0
+    MessageBox MB_ICONSTOP "Original Bambu Studio path was not found. Keep backup at $BackupRoot\original_es.mo and restore manually."
+    Abort
   IfFileExists "$BackupRoot\original_es.mo" 0 noBackup
     ; Restore only the language resource. Leave the official EXE and DLL untouched.
     CopyFiles /SILENT "$BackupRoot\original_es.mo" "$INSTDIR\resources\i18n\es\BambuStudio.mo"
@@ -69,6 +74,7 @@ Section "Uninstall"
       Delete "$BackupRoot\Uninstall_Thai_Patch.exe"
       RMDir "$BackupRoot"
       DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\BambuStudioThaiLanguagePatch"
+      DeleteRegKey HKLM "Software\BambuStudioThaiLanguagePatch"
       Goto complete
   noBackup:
     MessageBox MB_ICONSTOP "Backup was not found at $BackupRoot\original_es.mo. Nothing was changed."
