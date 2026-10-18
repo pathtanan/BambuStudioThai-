@@ -21,18 +21,48 @@ jobs:
       - name: Install NSIS
         shell: pwsh
         run: choco install nsis -y --no-progress
-      - name: Compile offline resource-only patch
+      - name: Setup Node.js for matching DeviceWeb
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/slic3r/GUI/DeviceWeb/device_page/package-lock.json
+      - name: Prepare validated gettext catalog
         shell: pwsh
         run: |
-          $compiler = Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'
+          python tools/prepare_patch_catalog.py resources/i18n/th/BambuStudio.mo packaging/build_payload/BambuStudio.mo
+          if ($LASTEXITCODE -ne 0) { throw 'Thai catalog preparation failed' }
+          python -c "import gettext; g=gettext.GNUTranslations(open('packaging/build_payload/BambuStudio.mo','rb')); assert g.gettext('Front')=='Front'; assert g.gettext('World coordinates')=='พิกัดอ้างอิงแท่นพิมพ์'"
+          if ($LASTEXITCODE -ne 0) { throw 'Thai catalog validation failed' }
+      - name: Compile Thai React Filament Manager for Spanish language slot
+        shell: pwsh
+        run: |
+          $web = 'src/slic3r/GUI/DeviceWeb/device_page'
+          $localeFile = Join-Path $web 'src/i18n.tsx'
+          $original = Get-Content -LiteralPath $localeFile -Raw -Encoding utf8
+          $needle = '      es_ES: { translation: es_ES },'
+          if (!$original.Contains($needle)) { throw 'Cannot locate expected Spanish locale entry' }
+          $adapted = $original.Replace($needle, ('      es_ES: { translation: th_TH },' + [Environment]::NewLine + '      es: { translation: th_TH },'))
+          Set-Content -LiteralPath $localeFile -Value $adapted -Encoding utf8
+          Push-Location $web
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw 'React build failed' }
+          Pop-Location
+          $destination = 'packaging/build_payload/device_page/dist'
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          Copy-Item -Path (Join-Path $web 'dist/*') -Destination $destination -Recurse -Force
+          if (!(Test-Path (Join-Path $destination 'index.html'))) { throw 'DeviceWeb bundle missing index.html' }
+      - name: Compile combined resource-only patch installer
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\NSIS\makensis.exe'
           if (!(Test-Path $compiler)) { throw "NSIS not found: $compiler" }
-          $source = 'resources/i18n/th/BambuStudio.mo'
-          if (!(Test-Path $source)) { throw "Translation missing: $source" }
-          if ((Get-Item $source).Length -lt 100000) { throw 'Catalog unusually small' }
           & $compiler 'packaging/thai-patch.nsi'
           if ($LASTEXITCODE -ne 0) { throw 'NSIS compilation failed' }
           $built = 'packaging/BambuStudio_Thai_Language_Patch_Setup.exe'
-          if (!(Test-Path $built)) { throw 'Setup file missing' }
+          if (!(Test-Path $built)) { throw 'Setup EXE missing' }
           Copy-Item $built 'BambuStudio_Thai_Language_Patch_Setup.exe' -Force
       - name: Upload installer for testing
         uses: actions/upload-artifact@v4
