@@ -10,7 +10,7 @@ Installs Thai gettext translations **over the Spanish translation slot** of an e
 5. Check Thai desktop menus; test login, AMS, camera, printer connectivity and print upload.
 
 ## Rollback
-Uninstall **Bambu Studio Thai Language Patch** in Windows Apps & Features. The installer backs up the original Spanish `.mo` to `%PROGRAMDATA%\BambuStudioThaiPatch\original_es.mo`. Do not delete that backup manually.
+Uninstall **Bambu Studio Thai Language Patch** in Windows Apps & Features. The installer backs up the original Spanish `.mo` to `%ProgramFiles%\BambuStudioThaiPatch\original_es.mo`. Do not delete that backup manually.
 
 ## Limitations / cautions
 - This is an **unverified test installer**. Build success does not guarantee official application compatibility.
