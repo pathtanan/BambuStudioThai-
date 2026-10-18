@@ -2,15 +2,9 @@ from pathlib import Path
 import argparse
 import struct
 
-# The stock ImGuizmo cube lacks Thai glyphs. Use ASCII labels on shared keys.
-# This is a resource-only patch; the original signed EXE/DLL are untouched.
+# True Thai locale and Thai-capable Windows UI font are installed by the patch.
+# This module only fixes terminology and keeps all translated navigation labels.
 REPLACEMENTS = {
-    "Front": "Front",
-    "Back": "Back",
-    "Top": "Top",
-    "Bottom": "Bottom",
-    "Camera\x04Left": "Left",
-    "Camera\x04Right": "Right",
     "Part": "ชิ้นส่วน",
     "World coordinates": "พิกัดอ้างอิงแท่นพิมพ์",
     "Operation": "รูปแบบการทำงาน",
