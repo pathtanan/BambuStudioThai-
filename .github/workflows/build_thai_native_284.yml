@@ -63,8 +63,8 @@ jobs:
           python tools/merge_native_web.py $lang src/slic3r/GUI/DeviceWeb/device_page/locales/th_TH.json
           if ($LASTEXITCODE -ne 0) { throw 'React translation merge failed' }
           Push-Location $web
-          npm ci --no-audit --no-fund
-          if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+          npm install --no-audit --no-fund --package-lock=false
+          if ($LASTEXITCODE -ne 0) { throw 'npm install failed' }
           npm run build
           if ($LASTEXITCODE -ne 0) { throw 'Version-matched React build failed' }
           Pop-Location
