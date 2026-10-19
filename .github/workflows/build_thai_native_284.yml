@@ -1,0 +1,94 @@
+name: Build Native Thai Patch - Official Bambu Studio 2.8.4.57
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - thai-mod
+    paths:
+      - 'packaging/native-thai-284.nsi'
+      - 'tools/merge_native_catalog.py'
+      - 'tools/merge_native_web.py'
+      - '.github/workflows/build_thai_native_284.yml'
+      - 'resources/i18n/th/BambuStudio.mo'
+      - 'src/slic3r/GUI/DeviceWeb/device_page/locales/th_TH.json'
+
+permissions:
+  contents: read
+
+jobs:
+  build-native-thai-patch:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout the reviewed Thai translations
+        uses: actions/checkout@v4
+      - name: Checkout matching official Bambu Studio 2.8.4.57 resources
+        uses: actions/checkout@v4
+        with:
+          repository: bambulab/BambuStudio
+          ref: v02.08.04.57
+          path: official_284
+          sparse-checkout: |
+            src/slic3r/GUI/DeviceWeb/device_page
+            resources/i18n/th
+            resources/fonts
+          sparse-checkout-cone-mode: true
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: official_284/src/slic3r/GUI/DeviceWeb/device_page/package-lock.json
+      - name: Build version-matched Thai gettext catalog
+        shell: pwsh
+        run: |
+          $official = 'official_284/resources/i18n/th/BambuStudio.mo'
+          if (!(Test-Path $official)) { throw 'Matching Official catalog missing' }
+          if (!(Test-Path 'official_284/resources/fonts/NotoSansThai-Regular.ttf')) { throw 'Target Official version does not bundle Thai fonts' }
+          python tools/prepare_patch_catalog.py resources/i18n/th/BambuStudio.mo packaging/native_payload/reviewed_th.mo
+          if ($LASTEXITCODE -ne 0) { throw 'Reviewed MO patch failed' }
+          python tools/merge_native_catalog.py $official packaging/native_payload/reviewed_th.mo packaging/native_payload/BambuStudio.mo
+          if ($LASTEXITCODE -ne 0) { throw 'Official catalog merge failed' }
+          python -c "import gettext; g=gettext.GNUTranslations(open('packaging/native_payload/BambuStudio.mo','rb')); assert g.gettext('World coordinates')=='พิกัดอ้างอิงแท่นพิมพ์'"
+          if ($LASTEXITCODE -ne 0) { throw 'Merged MO check failed' }
+      - name: Build Thai Filament Manager from exact Official source
+        shell: pwsh
+        run: |
+          $web = 'official_284/src/slic3r/GUI/DeviceWeb/device_page'
+          $lang = Join-Path $web 'locales/th_TH.json'
+          python tools/merge_native_web.py $lang src/slic3r/GUI/DeviceWeb/device_page/locales/th_TH.json
+          if ($LASTEXITCODE -ne 0) { throw 'React translation merge failed' }
+          Push-Location $web
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'npm ci failed' }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw 'Version-matched React build failed' }
+          Pop-Location
+          $dst = 'packaging/native_payload/device_page/dist'
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item -Path (Join-Path $web 'dist/*') -Destination $dst -Recurse -Force
+          if (!(Test-Path (Join-Path $dst 'index.html'))) { throw 'DeviceWeb index.html missing' }
+      - name: Install NSIS on build machine
+        shell: pwsh
+        run: choco install nsis -y --no-progress
+      - name: Compile reversible native Thai patch
+        shell: pwsh
+        run: |
+          $compiler = 'C:\Program Files (x86)\NSIS\makensis.exe'
+          if (!(Test-Path $compiler)) { throw 'NSIS compiler not found' }
+          & $compiler 'packaging/native-thai-284.nsi'
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS build failed' }
+          $out = 'packaging/BambuStudio_Thai_Official_2.8.4_Patch_Setup.exe'
+          if (!(Test-Path $out)) { throw 'Expected installer EXE missing' }
+          Copy-Item -LiteralPath $out -Destination 'BambuStudio_Thai_Official_2.8.4_Patch_Setup.exe' -Force
+      - name: Upload one-click test installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: BambuStudio_Thai_Official_2.8.4_Patch_Test
+          path: BambuStudio_Thai_Official_2.8.4_Patch_Setup.exe
+          if-no-files-found: error
+          retention-days: 30
